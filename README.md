@@ -4,10 +4,10 @@
 -----------
 <h> Requirements: </h>
 - python >= 3.9
-- pip3 install cython
-- pip3 install ripser
-- pip3 install numba, gensim
-- pip3 install numpy,scipy, 
+- cython
+- ripser
+- numba, gensim
+- numpy,scipy 
 - torch
 - torch_geometric
 - gudhi
