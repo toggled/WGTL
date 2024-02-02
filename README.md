@@ -1,3 +1,4 @@
+## When Witnesses Defend: A Witness Graph Topological Layer for Adversarial Graph Learning
 We propose the Witness Graph Topological Layer (WGTL), the first approach that systematically bridges adversarial graph learning with persistent homology representations of graphs. 
 
 WGTL adopts witness complex topological features as priors and topological loss as regulariser to make GNNs adversarially robust. We demonstrate the effectiveness of WGTL on various graph datasets under targetted as well as non-targetted attacks. 
