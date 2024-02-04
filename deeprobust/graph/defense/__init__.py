@@ -19,6 +19,7 @@ from .chebnetWGTL import ChebNetWGTL
 from .sgcWGTL import SGCWGTL
 from .sageWGTL import SAGEWGTL
 from .GNNGuardWGTL import GNNGuardWGTL
+from .GATWGTL import GATWGTL
 import warnings
 try:
     from .gat import GAT
@@ -34,4 +35,4 @@ except ImportError as e:
 
 __all__ = ['GCN', 'GCNSVD', 'GCNJaccard', 'RGCN', 'ProGNN', GCN_GNNGuard,
            'GraphConvolution', 'GGCL_F', 'GGCL_D', 'GAT', 'MedianGCN',
-           'ChebNet', 'SGC', 'SimPGCN', 'Node2Vec', 'DeepWalk','SimPGCNWGTL','ChebNetWGTL','SGCWGTL','SAGEWGTL','GNNGuardWGTL']
+           'ChebNet', 'SGC', 'SimPGCN', 'Node2Vec', 'DeepWalk','SimPGCNWGTL','ChebNetWGTL','SGCWGTL','SAGEWGTL','GNNGuardWGTL','GATWGTL']

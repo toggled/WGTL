@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import torch.nn.functional as F
-from deeprobust.graph.defense import GCN, GWitCompNN, LWitCompNN_V1, LWitCompNN_V2, LWitCompNN_V3, CWitCompNN_V1, CWitCompNN_V2, CWitCompNN_V3, SimPGCNWGTL, ChebNetWGTL, SGCWGTL, SAGEWGTL, GNNGuardWGTL
+from deeprobust.graph.defense import GCN, GWitCompNN, LWitCompNN_V1, LWitCompNN_V2, LWitCompNN_V3, CWitCompNN_V1, CWitCompNN_V2, CWitCompNN_V3, SimPGCNWGTL, ChebNetWGTL, SGCWGTL, SAGEWGTL, GNNGuardWGTL, GATWGTL
 from deeprobust.graph.utils import *
 from deeprobust.graph.data import Dataset
 import scipy.sparse as sp
@@ -27,7 +27,7 @@ parser.add_argument('--lambda_coeff', type=float, default=0.01,  help='lambda_co
 parser.add_argument('--nhid', type=int, default=128,  help='nhid')
 # parser.add_argument('--topo', type=str,default = 'witptb_local',help='witorig/witptb/witptb_local/vrorig/vrptb')
 parser.add_argument('--topo', type=str,default = 'both',help='local/global/both')
-parser.add_argument('--backbone', type=str,default = 'GCN',help='GCN/H2GCN/SIMPGCN/Chebnet/APPNP/SAGE/GNNGuard')
+parser.add_argument('--backbone', type=str,default = 'GCN',help='GCN/H2GCN/SIMPGCN/Chebnet/APPNP/SAGE/GNNGuard/GAT')
 parser.add_argument('--method',type=str,default='transformer',help='transformer/resnet/cnn')
 parser.add_argument('--device', type=str,default = 'cuda:0',help='cuda:0/cuda:1/...')
 parser.add_argument('--type', type=str,default = 'meta',help='meta/net/metapgd/pgd')
@@ -151,7 +151,7 @@ if args.backbone == 'GCN':
             print("You are using Transformer on global&local features now!")
             model = CWitCompNN_V3(nfeat=features.shape[1], nhid=args.nhid, nclass=int(labels.max()) + 1, dropout=args.drop_rate, lr=args.lr, weight_decay=args.weight_decay, device=device, alpha = args.alpha, beta = args.beta, gamma = args.gamma, lambda_coeff = args.lambda_coeff, aggregation_method = aggregation_method)
             model = model.to(device)
-            model.fit(features, perturbed_adj, witness_complex_feats[0], witness_complex_feats[1], labels, idx_train, idx_val, train_iters=args.epoch, verbose=True)
+            model.fit(features, perturbed_adj, witness_complex_feats[0], witness_complex_feats[1], labels, idx_train, idx_val, train_iters=args.epoch, verbose=True, patience = 100)
     # # using validation to pick model
     # model.fit(features, perturbed_adj, labels, idx_train, idx_val, train_iters=200, verbose=True)
     model.eval()
@@ -162,6 +162,13 @@ elif args.backbone == 'SAGE':
     model = SAGEWGTL(nfeat=features.shape[1], nhid=args.nhid, nclass=int(labels.max()) + 1, dropout=args.drop_rate, lr=args.lr, weight_decay=args.weight_decay, device=device, alpha = args.alpha, beta = args.beta, gamma = args.gamma, lambda_coeff = args.lambda_coeff, aggregation_method = aggregation_method)
     model = model.to(device)
     model.fit(features, perturbed_adj, witness_complex_feats[0], witness_complex_feats[1], labels, idx_train, idx_val, train_iters=args.epoch, verbose=True)
+    model.eval()
+    acc = model.test(idx_test)
+elif args.backbone == "GAT":
+    print('GAT')
+    model = GATWGTL(nfeat=features.shape[1], nhid=args.nhid, nclass=int(labels.max()) + 1, dropout=args.drop_rate, lr=args.lr, weight_decay=args.weight_decay, device=device, alpha = args.alpha, beta = args.beta, gamma = args.gamma, lambda_coeff = args.lambda_coeff, aggregation_method = aggregation_method)
+    model = model.to(device)
+    model.fit(features, perturbed_adj, witness_complex_feats[0], witness_complex_feats[1], labels, idx_train, idx_val, train_iters=args.epoch, verbose=True, patience=100)
     model.eval()
     acc = model.test(idx_test)
 
