@@ -20,7 +20,8 @@ WGTL adopts witness complex topological features as priors and topological loss 
 - numba 
 
 <h> Datasets </h>
-Download from here: 
+
+Download from here: https://drive.google.com/file/d/17YtLK2uwZYRtEIYWcqkahXvduOrtTpVt/view?usp=sharing 
 
 <h> Generating perturbed graphs (attacks): </h>
 1. python generate_attack.py --dataset citeseer --ptb_rate 0.05 --seed 15 --model A-Meta-Self # mettack
@@ -39,5 +40,5 @@ To generate features computed on poisoned graph:  Append `--poisoned True`
 To generate Vietoris-Rips features:  Append `--vr True`
 
 <h> Instructions: </h>
-2. test_gcnRe.py: test vanilla GCN performance under meta attack with different pertubation rates
-3. witcompnn_mainRe.py: test WGTL performance under mettack and nettack with different pertubation rates
+1. test_gcnRe.py: test vanilla GCN performance under meta attack with different pertubation rates
+2. witcompnn_mainRe.py: test WGTL performance under mettack and nettack with different pertubation rates
