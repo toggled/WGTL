@@ -1,12 +1,14 @@
 from ripser import ripser
-from persim import plot_diagrams
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import sparse
 import time
 import networkx as nx
 import random 
 import math
+from tqdm import tqdm 
+from time import time
+from numba import jit, prange
+import numba
 
 # def get_distancetocover(G, nodes,_L,debug = True):
 #     dist_to_cover = {}
@@ -159,12 +161,12 @@ def getLandmarksbynumL(G, L = 2, heuristic = 'degree'):
         del _degreenodes
         # print('L = ',L,' len(_L) = ',len(_L))
         dist_to_cover,cover = get_distancetocover(G, G.nodes,_L)
-        return _L, dist_to_cover,cover
+        return list(_L), dist_to_cover,cover
         
     if heuristic == 'random':
         _L = random.sample(G.nodes, k=L)
         dist_to_cover = get_distancetocover(G, G.nodes,_L)
-        return _L, dist_to_cover,cover
+        return list(_L), dist_to_cover,cover
     
         
 def getLandmarksbyeps(G, epsilon = 2, heuristic = 'epsmaxmin'):
@@ -208,6 +210,7 @@ def getLandmarksbyeps(G, epsilon = 2, heuristic = 'epsmaxmin'):
 def get_sparse_matrix(G,dist_to_cover,landmarks):
     data = {}
     all_pairSP_len = dict(nx.all_pairs_shortest_path_length(G))
+    # print('all pair sp')
     for i,u in enumerate(landmarks):
         for j,v in enumerate(landmarks):
             if i<j:
@@ -234,3 +237,164 @@ def get_sparse_matrix(G,dist_to_cover,landmarks):
     del data
     N = len(landmarks)
     return sparse.coo_matrix((D, (I, J)), shape=(N, N)).tocsr(), INFINITY
+
+# compute the |L| x |L| matrix => sparse distance metric on landmarks
+def get_sparse_matrix_cutoff(G,dist_to_cover,landmarks, covers = None):
+    # data = {}
+    debug = (covers is not None)
+    try:
+        cutoff = max(dist_to_cover[n] for n in dist_to_cover if dist_to_cover[n]!=math.inf)
+    except:
+        cutoff = 1
+    # print('cutoff: ',cutoff)
+    if covers is None:
+        witness_candidates = G.nodes
+        # enum_land = enumerate(landmarks)
+    # else:
+    #     print(len(landmarks),cutoff)
+    #     enum_land = tqdm(enumerate(landmarks))
+    # enum_land = enumerate(landmarks)
+    # print('cutoff: ',cutoff)
+    # all_pairSP_len = dict(nx.all_pairs_shortest_path_length(G,cutoff=cutoff))
+    # print('all pair sp')
+    I,J,D,INFINITY = [],[],[],0
+    memory = {}
+    if debug:
+        s_tm = time()
+    for u in landmarks:
+        memory[u] = nx.single_source_shortest_path_length(G,u,cutoff=cutoff)
+    if debug:
+        print('sp len time: ',time()-s_tm)
+    N=0
+    # print('len(memory) = ',len(memory))
+    # for i,u in tqdm(enumerate(landmarks)):
+    for i,u in enumerate(landmarks):
+        N+=1
+        # u_toall = nx.single_source_shortest_path_length(G,u,cutoff=cutoff)
+        u_toall = memory[u]
+        for j,v in enumerate(landmarks):
+            # if debug:
+            #     print(i,j)
+            if i>j:
+                continue 
+            key = (i,j)
+            # if debug:
+            #     print(key)
+            if j==i:
+                # data[(i,j)] = 0.0
+                val = 0.0
+                I.append(key[0])
+                J.append(key[1])
+                D.append(val)
+            else:
+                # v_toall = nx.single_source_shortest_path_length(G,v,cutoff=cutoff)
+                v_toall = memory[v]
+                e_ij = math.inf
+
+                if covers is not None:
+                    # witness_candidates = set(covers[u]).union(covers[v])
+                    witness_candidates = set(u_toall.keys()).union(v_toall.keys())
+                # witness_node = witness_candidates[0]
+                for n in witness_candidates: # witness node = n
+                    dist_i = u_toall.get(n,math.inf)
+                    dist_j = v_toall.get(n,math.inf)
+                    mx = max( max(dist_i,dist_j) - dist_to_cover[n],0.0)
+                    if mx < e_ij:
+                        e_ij = mx
+                        # witness_node = n  
+                    if e_ij <= 1: # Because the subsequent ones can't be smaller
+                        break
+                # data[(i,j)] = e_ij
+                # if debug:
+                #     print(key,' ',witness_node)
+                val = e_ij 
+                I.append(key[0])
+                J.append(key[1])
+                D.append(val)
+                I.append(key[1])
+                J.append(key[0])
+                D.append(val)
+            
+            # else:
+            #     val = data[(j,i)]
+
+            if val != math.inf:
+                INFINITY = max(val,INFINITY)
+    # for key,val in data.items():
+    #     I.append(key[0])
+    #     J.append(key[1])
+    #     D.append(val)
+    #     if val != math.inf:
+    #         INFINITY = max(val,INFINITY)
+    # del data
+    # N = len(landmarks)
+    # if debug:
+    #     print(D)
+    return sparse.coo_matrix((D, (I, J)), shape=(N, N)).tocsr(), INFINITY
+
+@jit(parallel=True, nopython=True)
+def get_sparse_matrix_cutoff_numba(memory, IJ, dist_to_cover):
+    INFINITY = 0
+    D = [numba.float64(x) for x in range(len(IJ))]
+    # I = [numba.int64(x) for x in range(0)]
+    # J = [numba.int64(x) for x in range(0)]
+    # D = [numba.float64(x) for x in range(0)]
+    # if debug:
+    #     s_tm = time()
+    
+    # if debug:
+    #     print('sp len time: ',time()-s_tm)
+    # if debug:
+    #     s_tm = time()
+    for iter in prange(len(IJ)): # Landmarks is a List
+        i,j = IJ[iter]
+        # print(i,j)
+        # for j in range(N):
+        #     # if debug: 
+        #     #     print(i,j)
+        #     if i>j:
+        #         continue 
+        #     key = (i,j)
+        #     # if debug:
+        #     #     print(key)
+        # if j==i:
+        #     val = 0.0
+        #     I.append(key[0])
+        #     J.append(key[1])
+        #     D.append(val)
+        # else:
+        u_toall = memory[i] # memory is a List
+        v_toall = memory[j]
+        e_ij = math.inf
+
+        # witness_candidates = set(covers[u]).union(covers[v])
+        # witness_candidates = u_toall.keys() + v_toall.keys() #set(u_toall.keys()).union(v_toall.keys())
+        for n in u_toall.keys(): # witness node = n
+            dist_i = u_toall.get(n,math.inf)
+            dist_j = v_toall.get(n,math.inf)
+            mx = max( max(dist_i,dist_j) - dist_to_cover.get(n,0),0.0) # dist_to_cover is a dictionary
+            if mx < e_ij:
+                e_ij = mx
+            if e_ij <= 1: # Because the subsequent ones can't be smaller
+                break
+        for n in v_toall.keys(): # witness node = n
+            dist_i = u_toall.get(n,math.inf)
+            dist_j = v_toall.get(n,math.inf)
+            mx = max( max(dist_i,dist_j) - dist_to_cover.get(n,0),0.0) # dist_to_cover is a dictionary
+            if mx < e_ij:
+                e_ij = mx
+            if e_ij <= 1: # Because the subsequent ones can't be smaller
+                break
+        D[iter] = e_ij
+            # val = e_ij 
+            # I.append(key[0])
+            # J.append(key[1])
+            # D.append(val)
+            # I.append(key[1])
+            # J.append(key[0])
+            # D.append(val)
+        if e_ij != math.inf:
+            INFINITY = max(e_ij,INFINITY)
+    # if debug:
+    #     print('nested for loop time: ',time()-s_tm)
+    return D,INFINITY
