@@ -22,7 +22,7 @@ parser.add_argument('--ptb_rate', type=float, default=0.05,  help='pertubation r
 parser.add_argument('--epoch', type=float, default=200,  help='epochs')
 parser.add_argument('--device', type=str,default = 'cuda:0',help='cuda:0/cuda:1/...')
 parser.add_argument('--type', type=str,default = 'meta',help='meta/net/metapgd/pgd')
-parser.add_argument('--colab',type=bool,default = True)
+parser.add_argument('--colab',type=bool,default = False)
 
 args = parser.parse_args()
 print(args)
@@ -96,5 +96,5 @@ else:
 result = pd.concat([result_df, pd.DataFrame(output,index = [0])])
 result.to_csv(csv_name, header=True, index=False)
 #print(result.head(10))
-print(csv_name)
+print('result saved at: ',csv_name)
 print('Mean=> ',result['acc'].mean(),' std => ',result['acc'].std())

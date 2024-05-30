@@ -17,7 +17,6 @@ WGTL adopts witness complex topological features as priors and topological loss 
 - gudhi
 - vit_pytorch
 - ogb
-- numba 
 
 <h> Datasets </h>
 
@@ -40,5 +39,13 @@ To generate features computed on poisoned graph:  Append `--poisoned True`
 To generate Vietoris-Rips features:  Append `--vr True`
 
 <h> Instructions: </h>
-1. test_gcnRe.py: test vanilla GCN performance under meta attack with different pertubation rates
-2. witcompnn_mainRe.py: test WGTL performance under mettack and nettack with different pertubation rates
+1. test_gcnRe.py: Run vanilla GCN performance under meta attack with different pertubation rates (Baseline)
+2. Run other baselines:
+    - GAT: test_gat.py
+    - SAGE: test_sage.py
+    - H2GCN: test_h2gcn.py
+    - Chebnet: test_chebnet.py
+    - SGC: test_sgc.py
+    - GNNGuard: test_gnnguard.py
+    - SIMPGCN: test_simpgcn.py
+3. witcompnn_mainRe.py: Run WGTL performance under mettack and nettack with different pertubation rates & different backbones (Ours)

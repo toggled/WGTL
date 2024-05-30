@@ -103,5 +103,5 @@ else:
 result = pd.concat([result_df, pd.DataFrame(output,index = [0])])
 result.to_csv(csv_name, header=True, index=False)
 #print(result.head(10))
-print(csv_name)
+print('result saved at: ',csv_name)
 print('Mean=> ',result['acc'].mean(),' std => ',result['acc'].std())

@@ -321,6 +321,7 @@ elif args.backbone == 'GNNGuard':
 
 output = {'seed':args.seed,'acc':acc}
 csv_name = [args.backbone+"/",'/content/drive/MyDrive/WitnesscomplexGNNs/'+args.backbone+"/"][args.colab]
+os.system('mkdir -p '+csv_name)
 csv_name += args.backbone+'_'+aggregation_method+"_"+args.topo+'_'+args.method+'_'+args.dataset + "_" + str(args.ptb_rate) + '.'+attack+'.csv'
 if os.path.exists(csv_name):
     result_df = pd.read_csv(csv_name)
@@ -329,7 +330,7 @@ else:
 result = pd.concat([result_df, pd.DataFrame(output,index = [0])])
 result.to_csv(csv_name, header=True, index=False)
 # print(result.head(10))
-print(csv_name)
+print('result saved at: ',csv_name)
 print('Mean=> ',result['acc'].mean(),' std => ',result['acc'].std())
 
 

@@ -55,7 +55,9 @@ model.eval()
 # You can use the inner function of model to test
 acc = model.test(idx_test)
 output = {'seed':args.seed,'acc':acc}
-csv_name = 'GAT_acc_'+args.dataset + "_" + str(args.ptb_rate) + '.'+attack+'.csv'
+csv_name = 'GAT/'
+os.system('mkdir -p '+csv_name)
+csv_name = 'GAT/GAT_acc_'+args.dataset + "_" + str(args.ptb_rate) + '.'+attack+'.csv'
 if os.path.exists(csv_name):
     result_df = pd.read_csv(csv_name)
 else:
@@ -63,5 +65,5 @@ else:
 result = pd.concat([result_df, pd.DataFrame(output,index = [0])])
 result.to_csv(csv_name, header=True, index=False)
 #print(result.head(10))
-print(csv_name)
+print('result saved at: ',csv_name)
 print('Mean=> ',result['acc'].mean(),' std => ',result['acc'].std())

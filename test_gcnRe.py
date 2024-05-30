@@ -26,7 +26,8 @@ print(args)
 args.cuda = torch.cuda.is_available()
 device = args.device
 # load original data and attacked data
-prefix = '/content/drive/MyDrive/WitnesscomplexGNNs/data/'
+# prefix = '/content/drive/MyDrive/WitnesscomplexGNNs/data/'
+prefix = 'data/'
 attack='meta'
 if args.dataset in ['fb100','snap-patents']: # Heterophily dataset:
     from deeprobust.graph.data import CustomDataset 
@@ -62,7 +63,9 @@ model.eval()
 # You can use the inner function of model to test
 acc = model.test(idx_test)
 output = {'seed':args.seed,'acc':acc}
-csv_name = '/content/drive/MyDrive/WitnesscomplexGNNs/GCN/'
+# csv_name = '/content/drive/MyDrive/WitnesscomplexGNNs/GCN/'
+csv_name = 'GCN/'
+os.system('mkdir -p '+csv_name)
 csv_name += 'GCN_acc_'+args.dataset + "_" + str(args.ptb_rate) + '.'+attack+'.csv'
 if os.path.exists(csv_name):
     result_df = pd.read_csv(csv_name)
